@@ -22,7 +22,6 @@ print(puzzle_input)
 
 solution_1 = find_sum_pairs(puzzle_input, target_sum)
 
-
 aoc.print_solution(1, solution_1[0] * solution_1[1])
 
 for i, e in enumerate(puzzle_input):
