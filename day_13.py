@@ -1,14 +1,19 @@
 from lib.aoclib import AOCLib
 
 def egcd(x, y):
-    # Extended GCD algorithm; compute GCD and Bézout coefficients
+    # Extended GCD algorithm; compute GCD and Bézout coefficients m1, m2
+    # Output o_r = gcd(x, y)
+    # Output o_s, o_t = m1, m2
+    # x*m1 + y*m2 = gcd(x, y)
 
-    x0, x1, y0, y1 = 1, 0, 0, 1
-    while y != 0:
-        q, x, y = x // y, y, x % y
-        x0, x1 = x1, x0 - q * x1
-        y0, y1 = y1, y0 - q * y1
-    return x, x0, y0
+    o_r, r, o_s, s, o_t, t = x, y, 1, 0, 0, 1
+
+    while r != 0:
+        q = o_r // r
+        o_r, r = r, o_r - q*r
+        o_s, s = s, o_s - q*s
+        o_t, t = t, o_t - q*t
+    return o_r, o_s, o_t
 
 puzzle = (2020, 13)
 
@@ -51,6 +56,8 @@ N = 1
 a = []
 n = []
 
+# Calculate a_i and n_i and N = n_1 * n_2 * n_3 ...
+
 for i, bus in enumerate(puzzle_input[1].split(',')):
     if bus != 'x':
         n_i = int(bus)
@@ -65,9 +72,20 @@ for i, n_i in enumerate(n):
     a_i = a[i]
     g, m1, m2 = egcd(c_i, n_i)
     assert (g == 1), 'Moduli do not appear to be co-prime!'
-    # m1 = (1 / c_i) mod n_i
+
+    # By Bézout's identity: c_i*m1 + n_i*m2 = g = 1
+    # => (c_i*m1 + n_i*m2) mod n_i = 1 mod n_i
+    # => c_i*m1 mod n_i = 1 mod n_i
+    # => m1 = (1 / c_i) mod n_i
+    #
     # (a_i * c_i * m1) mod n_i = (a_i * c_i * (1 / c_i)) mod n_i = a_i mod n_i
-    # (a_i * c_i * m1) mod c_i = 0 mod N/n_i = 0 mod n_x (when x != i)
+    # (a_i * c_i * m1) mod c_i = 0 mod N/n_i = 0 mod n_x (for any x != i)
+    #
+    # i.e. a_i * c_i * m1 satisfies the ith congruence but contributes 0
+    # to every other congruence.
+    #
+    # Therefore the sum of each of these partial solutions satisfies all
+    # the congruences simultaneously.
 
     answer += a_i * c_i * m1
 
