@@ -18,7 +18,7 @@ class NSpace:
         self.active_cubes = {tuple([x, y] + [0] * (dimensions-2))
                              for y, row in enumerate(initial_state)
                              for x, state in enumerate(row) if state == '#'}
-        self.sniff_space = self.adjacent_cubes(self.active_cubes)
+        self.neighbours = {}
 
     def adjacent_cubes(self, cubes):
         return {tuple([a + b for a, b in zip(cube, offset)])
@@ -26,29 +26,23 @@ class NSpace:
                 for cube in cubes}
 
     def active_neighbours(self, cube):
-        return len([neighbour for neighbour in
-                    [tuple([a + b for a, b in zip(cube, offset)])
-                     for offset in self.offsets]
-                    if neighbour in self.active_cubes])
+        return len({tuple([c + o for c, o in zip(cube, offset)])
+                     for offset in self.offsets} & self.active_cubes)
 
     def do_cycle(self):
         cubes_to_remove = {cube for cube in self.active_cubes
                            if not 2 <= self.active_neighbours(cube) <= 3}
-        cubes_to_add = {cube for cube in self.sniff_space
-                        if (cube not in self.active_cubes and
-                            self.active_neighbours(cube) == 3)}
-        if cubes_to_add:
-            new_sniff_space = self.adjacent_cubes(cubes_to_add)
-            self.sniff_space.update(new_sniff_space)
+        cubes_to_add = {cube for cube in (self.adjacent_cubes(self.active_cubes)
+                                          - self.active_cubes)
+                        if self.active_neighbours(cube) == 3}
 
-        self.active_cubes.update(cubes_to_add)
-        self.active_cubes.difference_update(cubes_to_remove)
-
+        self.active_cubes -= cubes_to_remove
+        self.active_cubes |= cubes_to_add
 
 
 puzzle = (2020, 17)
 
-# Initialise the helper library1
+# Initialise the helper library
 
 aoc = AOCLib(puzzle[0])
 
