@@ -11,24 +11,21 @@ class NSpace:
                 for r in cls.nrange(extents[:-1]):
                     yield r + [i]
 
-    @classmethod
-    def points_in_hypercube(cls, extents):
-        for p in cls.nrange(extents):
-            yield tuple(p)
-
     def __init__(self, dimensions, initial_state):
-        origin = (0,) * dimensions
-        self.offsets = [offset for offset in
-                        self.points_in_hypercube([[-1, 1]] * dimensions)
+        origin = [0] * dimensions
+        self.offsets = [offset for offset in self.nrange([[-1, 1]] * dimensions)
                         if offset != origin]
         self.active_cubes = {tuple([x, y] + [0] * (dimensions-2))
                              for y, row in enumerate(initial_state)
                              for x, state in enumerate(row) if state == '#'}
+        self.sniff_space = self.adjacent_cubes(self.active_cubes)
 
-        self.extents = [[-1, len(initial_state[0])],
-                        [-1, len(initial_state)]] + [[-1, 1]] * (dimensions-2)
+    def adjacent_cubes(self, cubes):
+        return {tuple([a + b for a, b in zip(cube, offset)])
+                for offset in self.offsets
+                for cube in cubes}
 
-    def count_neighbours(self, cube):
+    def active_neighbours(self, cube):
         return len([neighbour for neighbour in
                     [tuple([a + b for a, b in zip(cube, offset)])
                      for offset in self.offsets]
@@ -36,17 +33,17 @@ class NSpace:
 
     def do_cycle(self):
         cubes_to_remove = {cube for cube in self.active_cubes
-                           if not 2 <= self.count_neighbours(cube) <= 3}
-        cubes_to_add = {cube for cube in self.points_in_hypercube(self.extents)
+                           if not 2 <= self.active_neighbours(cube) <= 3}
+        cubes_to_add = {cube for cube in self.sniff_space
                         if (cube not in self.active_cubes and
-                            self.count_neighbours(cube) == 3)}
+                            self.active_neighbours(cube) == 3)}
         if cubes_to_add:
-            self.extents = [[min(old_extent[0], min(new_extent) - 1),
-                             max(old_extent[1], max(new_extent) + 1)]
-                            for new_extent, old_extent in
-                            zip(zip(*cubes_to_add), self.extents)]
-        self.active_cubes.difference_update(cubes_to_remove)
+            new_sniff_space = self.adjacent_cubes(cubes_to_add)
+            self.sniff_space.update(new_sniff_space)
+
         self.active_cubes.update(cubes_to_add)
+        self.active_cubes.difference_update(cubes_to_remove)
+
 
 
 puzzle = (2020, 17)
