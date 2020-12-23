@@ -46,7 +46,7 @@ def evaluate_expression(expression, precedence):
 
             num_brackets = part.count(')')
             rp_stack.append(float(part if num_brackets == 0
-                                else part[:-num_brackets]))
+                                  else part[:-num_brackets]))
 
             # If this part is closing one or more brackets then append any
             # remaining operators in the history to the RP stack for each
